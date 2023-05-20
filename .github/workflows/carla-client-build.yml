@@ -3,13 +3,13 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - carla-client/Containerfile
+      - carla-client/Dockerfile
       - .github/workflows/carla-client-build.yml # Self-trigger
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: bounverif/carla-client
-  VERSION: 0.9.14
+  VERSION: 0.9.14_RSS
 
 jobs:
   build-and-push-image:
@@ -36,6 +36,6 @@ jobs:
           build-args: "VERSION=${{ env.VERSION }}"
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
           push: true
-          file: carla-client/Containerfile
+          file: carla-client/Dockerfile
           cache-from: type=gha
           cache-to: type=gha,mode=max
