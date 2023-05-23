@@ -3,13 +3,13 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - carla-client/Dockerfile
-      - .github/workflows/carla-client-build.yml # Self-trigger
+      - carla/client.dockerfile
+      - .github/workflows/carla-client.yml # Self-trigger
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: bounverif/carla-client
-  VERSION: 0.9.14_RSS
+  VERSION: 0.9.14
 
 jobs:
   build-and-push-image:
@@ -17,6 +17,9 @@ jobs:
     permissions:
       contents: read
       packages: write
+    strategy:
+        matrix:
+          python-version: [3.7, 3.8]
 
     steps:
       - name: Checkout repository
@@ -33,9 +36,11 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          build-args: "VERSION=${{ env.VERSION }}"
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
+          build-args: |
+            VERSION=${{ env.VERSION }} 
+            PYTHON_VERSION=${{ matrix.python-version }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-py${{ matrix.python-version }}:${{ env.VERSION }}
           push: true
-          file: carla-client/Dockerfile
+          file: carla/client.dockerfile
           cache-from: type=gha
           cache-to: type=gha,mode=max

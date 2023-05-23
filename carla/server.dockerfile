@@ -1,5 +1,5 @@
 #
-# docker build -t bounverif/carla-server:0.9.14
+# docker build -t bounverif/carla-server:0.9.14_RSS
 # 
 FROM ubuntu:focal as builder
 

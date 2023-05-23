@@ -1,9 +1,9 @@
-name: Build Carla container image
+name: Build Carla Server container image
 on:
   workflow_dispatch:
   push:
     paths:
-      - carla-server/Dockerfile
+      - carla/server.dockerfile
       - .github/workflows/carla-server-build.yml # Self-trigger
 
 env:
@@ -36,6 +36,6 @@ jobs:
           build-args: "VERSION=${{ env.VERSION }}"
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
           push: true
-          file: carla-server/Dockerfile
+          file: carla/server.dockerfile
           cache-from: type=gha
           cache-to: type=gha,mode=max
