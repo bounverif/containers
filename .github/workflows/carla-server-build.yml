@@ -9,7 +9,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: bounverif/carla-server
-  VERSION: 0.9.14_RSS
+  VERSION: 0.9.14
 
 jobs:
   build-and-push-image:
