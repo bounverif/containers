@@ -3,12 +3,11 @@
 # 
 FROM ubuntu:focal as builder
 
-ARG VERSION=0.9.14_RSS
-ARG MAP_VERSION=0.9.14
-ARG CARLA_RELEASE_NAME=CARLA_${VERSION}
-
+ARG VERSION=0.9.14
+ARG CARLA_VERSION=$VERSION
+ARG CARLA_RELEASE_NAME=CARLA_${VERSION}_RSS
 ARG CARLA_RELEASE_TARBALL=https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/${CARLA_RELEASE_NAME}.tar.gz
-ARG CARLA_ADDITIONAL_MAPS=https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/AdditionalMaps_${MAP_VERSION}.tar.gz
+ARG CARLA_ADDITIONAL_MAPS=https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/AdditionalMaps_${CARLA_VERSION}.tar.gz
 
 # Install core packages required to install from external repos
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
@@ -42,5 +41,10 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 USER carla
 WORKDIR /home/carla/
 
-CMD /bin/bash /opt/carla-simulator/CarlaUE4.sh -RenderOffScreen -nosound
+CMD /bin/bash /opt/carla-simulator/CarlaUE4.sh \
+    -RenderOffScreen -ResX=1 -ResY=1 -nosound -quality-level=Low && \
+    python -m pip install --upgrade pip && \
+    python -m pip install carla==0.9.14 && \
+    python /opt/carla-simulator/PythonAPI/util/config.py --map Town05 
+
 EXPOSE 2000 2001 2002
