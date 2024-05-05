@@ -33,11 +33,10 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: awsim-desktop
           build-args: |
             VERSION=${{ env.VERSION }} 
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
           push: true
-          file: carla/client.dockerfile
           cache-from: type=gha
           cache-to: type=gha,mode=max
