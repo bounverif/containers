@@ -11,6 +11,10 @@ env:
   IMAGE_NAME: bounverif/carla
   CARLA_VERSION: 0.9.15
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   server-build:
     runs-on: ubuntu-latest
@@ -24,7 +28,7 @@ jobs:
         with:
           # this might remove tools that are actually needed,
           # if set to "true" but frees about 6 GB
-          tool-cache: false
+          tool-cache: true
           
           # all of these default to true, but feel free to set to
           # "false" if necessary for your workflow
@@ -55,6 +59,8 @@ jobs:
             "CARLA_VERSION=${{ env.CARLA_VERSION }}"
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:release-${{ env.CARLA_VERSION }}
           push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Build and push extended image
         uses: docker/build-push-action@v5
@@ -65,3 +71,5 @@ jobs:
             "CARLA_VERSION=${{ env.CARLA_VERSION }}"
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:release-extra-${{ env.CARLA_VERSION }}
           push: true
+          # cache-from: type=gha
+          # cache-to: type=gha,mode=max
