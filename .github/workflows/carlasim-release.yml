@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  server-build:
+  release-container-build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -71,5 +71,5 @@ jobs:
             "CARLA_VERSION=${{ env.CARLA_VERSION }}"
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:release-extra-${{ env.CARLA_VERSION }}
           push: true
-          # cache-from: type=gha
-          # cache-to: type=gha,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
