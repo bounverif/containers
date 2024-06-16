@@ -29,13 +29,14 @@ jobs:
       #     tool-cache: true
 
       - name: Maximize build space
-        uses: easimon/maximize-build-space@master
+        uses: easimon/maximize-build-space@v10
         with:
           remove-dotnet: 'true'
           remove-android: 'true'
           remove-haskell: 'true'
           remove-codeql: 'true'
           remove-docker-images: 'true'
+          build-mount-path: '/var/lib/docker'
 
       - name: Restart docker
         run: sudo service docker restart
