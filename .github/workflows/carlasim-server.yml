@@ -23,10 +23,22 @@ jobs:
       packages: write
 
     steps:
-      - name: Free disk space (Ubuntu)
-        uses: jlumbroso/free-disk-space@main
+      # - name: Free disk space (Ubuntu)
+      #   uses: jlumbroso/free-disk-space@main
+      #   with:
+      #     tool-cache: true
+
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@master
         with:
-          tool-cache: true
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+          remove-codeql: 'true'
+          remove-docker-images: 'true'
+
+      - name: Show disk space
+        run: sudo df -h
 
       - name: Checkout repository
         uses: actions/checkout@v4
