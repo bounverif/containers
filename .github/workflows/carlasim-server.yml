@@ -37,8 +37,8 @@ jobs:
           remove-codeql: 'true'
           remove-docker-images: 'true'
 
-      - name: Show disk space
-        run: sudo df -h
+      - name: Restart docker
+        run: sudo service docker restart
 
       - name: Checkout repository
         uses: actions/checkout@v4
