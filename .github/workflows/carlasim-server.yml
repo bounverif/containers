@@ -63,3 +63,6 @@ jobs:
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Show final disk space
+        run: df -h
