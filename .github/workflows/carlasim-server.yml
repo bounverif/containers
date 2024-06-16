@@ -65,4 +65,4 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Show final disk space
-        run: df -h
+        run: lsblk -ao NAME,FSTYPE,FSSIZE,FSUSED,FSUSE%
