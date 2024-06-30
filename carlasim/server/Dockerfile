@@ -1,17 +1,35 @@
-ARG CARLA_VERSION=0.9.15
-FROM ghcr.io/bounverif/carla:release-${CARLA_VERSION} as carla-release
-
-FROM docker.io/library/ubuntu:22.04 as carla-server
-
-ARG USER=bounverif
-ARG USERGROUP=${USER}
-ARG UID=1000
-ARG GID=${UID}
+FROM nvidia/opengl:1.2-glvnd-runtime-ubuntu22.04 AS carla-server
 
 ARG CARLA_VERSION=0.9.15
+ARG CARLA_RELEASE_SERVER=https://carla-releases.s3.us-east-005.backblazeb2.com/Linux
+ARG CARLA_RELEASE_TAR=CARLA_${CARLA_VERSION}.tar.gz
+ARG CARLA_RELEASE_URL=${CARLA_RELEASE_SERVER}/${CARLA_RELEASE_TAR}
+ARG CARLA_ADDITIONAL_MAPS_TAR=AdditionalMaps_${CARLA_VERSION}.tar.gz
+ARG CARLA_ADDITIONAL_MAPS_URL=${CARLA_RELEASE_SERVER}/${CARLA_ADDITIONAL_MAPS_TAR}
+
 ENV CARLA_VERSION=${CARLA_VERSION}
+ENV CARLA_RELEASE_URL=${CARLA_RELEASE_URL}
+ENV CARLA_ADDITIONAL_MAPS_URL=${CARLA_ADDITIONAL_MAPS_URL}
 
-RUN apt-get update && apt-get -y install --no-install-recommends \
+RUN set -eux; \
+    apt-get update; \
+    apt-get -y install --no-install-recommends \
+      tar \
+      wget \
+      gnupg2 \
+      software-properties-common \
+      ; \
+    apt-get autoremove -y && apt-get clean -y
+
+RUN mkdir -p /opt/carla-simulator; \ 
+    wget -qO- ${CARLA_RELEASE_URL} | tar xz --no-same-owner --no-same-permissions --mode 755 -C /opt/carla-simulator
+
+RUN wget -qO- ${CARLA_ADDITIONAL_MAPS_URL} | tar xz --keep-newer-files --no-same-owner --no-same-permissions --mode 0755 -C /opt/carla-simulator
+
+RUN set -eux; \ 
+    apt-get update; \
+    apt-get -qy install --no-install-recommends -o Dpkg::Options::="--force-confold" \
+      sudo \
       supervisor \
       python3 \ 
       python3-pip \
@@ -20,53 +38,32 @@ RUN apt-get update && apt-get -y install --no-install-recommends \
       libegl1 \
       libvulkan1 \
       vulkan-tools \
+      valgrind \
       libomp5 \
       xdg-user-dirs \
-    && apt-get autoremove -y && apt-get clean -y
+      ; \
+    apt-get autoremove -y && apt-get clean -y
 
-COPY --chown=root:root --chmod=755 --from=carla-release /carla_release /opt/carla-simulator/
-COPY --chown=root:root --chmod=755 supervisord.conf /etc/supervisord.conf
-COPY --chown=root:root --chmod=755 entrypoint.sh /etc/entrypoint.sh
+COPY --chown=root:root --chmod=0755 carla.sh /etc/carla/carla.sh
 
-RUN groupadd ${USERGROUP} -g ${GID} && useradd -ms /bin/bash ${USER} -g ${USERGROUP} -u ${UID} -G sudo
+ARG USER=bounverif
+ARG USERGROUP=${USER}
+ARG UID=1000
+ARG GID=${UID}
+
+RUN groupadd ${USERGROUP} -g ${GID}; \
+    useradd -ms /bin/bash ${USER} -g ${USERGROUP} -u ${UID} -G sudo,video; \
+    printf "${USER} ALL= NOPASSWD: ALL\\n" >> /etc/sudoers
 
 USER ${USER}
-WORKDIR ${HOME}
+WORKDIR /home/${USER}
+
+ENV DISPLAY=:0
+ENV XDG_RUNTIME_DIR=/run/user/${UID}
 
 RUN python3 -m pip install --user carla==${CARLA_VERSION}
 
-ENV DISPLAY :0
-ENV NVIDIA_VISIBLE_DEVICES all
-ENV NVIDIA_DRIVER_CAPABILITIES all
-ENV XDG_RUNTIME_DIR /run/user/${UID}
-ENV SDL_VIDEODRIVER=x11
-
-ENV CARLA_SERVER_ARGS="-RenderOffScreen -ResX=1 -ResY=1 -nosound -quality-level=Low"
-ENV CARLA_SERVER_MAP="Town05"
-
-ENTRYPOINT ["/usr/bin/supervisord"]
+ENTRYPOINT ["/bin/bash", "-c"]
+CMD ["/etc/carla/carla.sh"]
 
 EXPOSE 2000 2001 2002
-
-
-
-
-
-
-
-
-
-
-FROM docker.io/library/ubuntu:22.04 as carla-client
-
-ARG CARLA_VERSION=0.9.15
-ENV CARLA_VERSION=${CARLA_VERSION}
-
-RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install \
-        python3 \ 
-        python3-pip \
-    && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
-
-RUN python3 -m pip install --upgrade pip && \
-    python3 -m pip install numpy pygame carla==${CARLA_VERSION} 
